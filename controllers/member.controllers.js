@@ -1,6 +1,5 @@
 const memberModel = require("../models/member.model");
 const bcrypt = require("bcrypt");
-const authSession = require("../middleware/authSession");
 
 const memberController = {
   register: async (req, res) => {
@@ -97,6 +96,8 @@ const memberController = {
   profile: async (req, res) => {
     try {
       const memberSession = await req.session.member;
+
+      if (!memberSession) throw new Error("Anda harus login dulu");
       res.status(200).json({
         status: "success",
         data: memberSession,

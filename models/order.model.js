@@ -1,5 +1,6 @@
 const db = require("../db/db.connection");
 const { Sequelize } = require("sequelize");
+const Member = require("./member.model");
 
 const Order = db.define(
   "Order",
@@ -9,12 +10,12 @@ const Order = db.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    userId: {
+    memberId: {
       type: Sequelize.INTEGER,
       allowNull: false,
       references: {
-        model: User,
-        key: "id",
+        model: Member,  // Model yang dirujuk
+        key: "id",      // Primary key pada model Member
       },
     },
     totalAmount: {
@@ -35,8 +36,11 @@ const Order = db.define(
     },
   },
   {
-    timestamps: true, // Akan otomatis menambahkan createdAt dan updatedAt
+    timestamps: true,
   }
 );
+
+// Asosiasi Order dan Member (Many-to-One)
+Order.belongsTo(Member, { foreignKey: "memberId" });
 
 module.exports = Order;

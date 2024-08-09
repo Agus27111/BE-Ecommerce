@@ -1,5 +1,6 @@
 const { Sequelize } = require("sequelize");
 const db = require("../db/db.connection.js");
+const Order = require("./order.model");
 
 const Product = db.define(
   "product",
@@ -31,5 +32,16 @@ const Product = db.define(
     timestamps: true,
   }
 );
+
+// Asosiasi Product dan Order (Many-to-Many)
+Product.belongsToMany(Order, {
+  through: "OrderProducts", // Tabel perantara
+  foreignKey: "productId",
+});
+Order.belongsToMany(Product, {
+  through: "OrderProducts", // Tabel perantara
+  foreignKey: "orderId",
+});
+
 
 module.exports = Product;

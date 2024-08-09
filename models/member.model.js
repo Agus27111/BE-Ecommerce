@@ -1,5 +1,6 @@
 const { Sequelize } = require("sequelize");
 const db = require("../db/db.connection.js");
+const Order = require("./order.model");
 
 const Member = db.define(
   "member",
@@ -21,5 +22,8 @@ const Member = db.define(
     timestamps: true,
   }
 );
+
+// Asosiasi Member dan Order (One-to-Many)
+Member.hasMany(Order, { foreignKey: "memberId" });
 
 module.exports = Member;

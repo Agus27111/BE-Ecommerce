@@ -100,6 +100,18 @@ const userController = {
       return errorResponse(500, error.message || "Failed to logout", res);
     }
   },
+  list: async (req, res) => {
+    try {
+      const allUser = await userModel.findAll();
+      return successResponse(200, allUser, "this is all user", res);
+    } catch (error) {
+      return errorResponse(
+        500,
+        error.message || "Failed to show all user",
+        res
+      );
+    }
+  },
 };
 
 module.exports = userController;

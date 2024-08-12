@@ -15,4 +15,14 @@ const loginSchema = Joi.object({
   password: Joi.string().min(8).required(),
 });
 
-module.exports = { registerSchema, loginSchema };
+const categorySchema = Joi.object({
+  category: Joi.string().min(3).max(10).required(),
+});
+
+
+const statusArticleSchema = Joi.object({
+  status: Joi.string().valid('public', 'user').required()
+});
+
+
+module.exports = { registerSchema, loginSchema, categorySchema, statusArticleSchema };

@@ -1,4 +1,5 @@
 const categoryModel = require("../models/category.model");
+const articleModel = require("../models/article.model");
 const { categorySchema } = require("../libraries/validation.library");
 const {
   successResponse,
@@ -74,16 +75,22 @@ const userController = {
 
   getOneById: async (req, res) => {
     try {
-      const id = req.params.id;
-      const categoryById = await categoryModel.findOne({ where: { id } });
+      const categoryId = req.params.categoryId;
 
-      //isExist
-      if (!categoryById) throw new Error("category did not exist");
+      // Mencari artikel berdasarkan categoryId
+      const articlesByCategory = await articleModel.findAll({
+        where: {
+          categoryId: categoryId,
+        },
+      });
+
+      if (!articlesByCategory.length)
+        throw new Error("No articles found for this category");
 
       return successResponse(
         200,
-        categoryById,
-        `this is the category you are looking for`,
+        articlesByCategory,
+        "Here are the articles for this category",
         res
       );
     } catch (error) {

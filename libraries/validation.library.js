@@ -19,10 +19,17 @@ const categorySchema = Joi.object({
   category: Joi.string().min(3).max(10).required(),
 });
 
-
 const statusArticleSchema = Joi.object({
-  status: Joi.string().valid('public', 'user').required()
+  title: Joi.string().required(),
+  content: Joi.string().required(),
+  publicity: Joi.date().required(),
+  status: Joi.string().valid("public", "user").required(),
+  categoryId: Joi.number().required(),
 });
 
-
-module.exports = { registerSchema, loginSchema, categorySchema, statusArticleSchema };
+module.exports = {
+  registerSchema,
+  loginSchema,
+  categorySchema,
+  statusArticleSchema,
+};

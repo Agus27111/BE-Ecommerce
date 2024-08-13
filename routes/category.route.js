@@ -6,6 +6,7 @@ const cookieMiddleware = require("../middleware/cookieMiddleware");
 route.get("/", categoryController.getAll);
 route.post("/create", cookieMiddleware, categoryController.create);
 route.delete("/:id", cookieMiddleware, categoryController.delete);
-route.get("/:id", cookieMiddleware, categoryController.getOneById);
+//find article by categoryId
+route.get("/:categoryId", cookieMiddleware, categoryController.getOneById);
 
 module.exports = route;

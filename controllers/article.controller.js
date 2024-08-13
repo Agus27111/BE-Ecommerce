@@ -1,19 +1,22 @@
 const articleModel = require("../models/article.model");
 const categoryModel = require("../models/category.model");
-const { categorySchema } = require("../libraries/validation.library");
+const {
+  categorySchema,
+  statusArticleSchema,
+} = require("../libraries/validation.library");
 const {
   successResponse,
   errorResponse,
 } = require("../libraries/response.library");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 
 const articleController = {
   getAll: async (req, res) => {
     try {
       const freeArticle = await articleModel.findAll({
         where: {
-          authorId: {
-            [Op.eq]: 2,
+          status: {
+            [Op.eq]: "public",
           },
         },
       });
@@ -24,7 +27,7 @@ const articleController = {
         return successResponse(
           200,
           freeArticle,
-          "please enjoy our article",
+          "please enjoy our free article",
           res
         );
       }
@@ -46,14 +49,24 @@ const articleController = {
 
   findByTitle: async (req, res) => {
     try {
-      const title = req.params.title;
+      const title = req.params.title.toLowerCase();
 
       //searching the title
-      const dataByTitle = await articleController.findAll({
+      // const dataByTitle = await articleModel.findAll({
+      //   where: {
+      //     title: {
+      //       [Op.substring]: `${title}`,
+      //     },
+      //   },
+      // });
+
+      const dataByTitle = await articleModel.findAll({
         where: {
-          title: {
-            [Op.substring]: `${title}`,
-          },
+          [Op.and]: Sequelize.where(
+            Sequelize.fn("LOWER", Sequelize.col("title")),
+            "LIKE",
+            `%${title}%`
+          ),
         },
       });
 
@@ -69,16 +82,23 @@ const articleController = {
   },
   findByPublicity: async (req, res) => {
     try {
-      const publicity = req.params.publicity;
+      const year = req.params.year;
 
-      //searching the title
-      const dataByPublicity = await articleController.findAll({
+      // Menentukan rentang tanggal untuk tahun yang diberikan
+      const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
+      const endDate = new Date(`${year}-12-31T23:59:59.999Z`);
+
+      // Searching by year
+      const dataByPublicity = await articleModel.findAll({
         where: {
-          publicity: publicity,
+          publicity: {
+            [Op.between]: [startDate, endDate],
+          },
         },
       });
+      console.log(dataByPublicity);
 
-      if (!dataByPublicity) throw new Error("data not found");
+      if (!dataByPublicity.length) throw new Error("data not found");
 
       return successResponse(
         200,
@@ -99,6 +119,11 @@ const articleController = {
       const { title, content, publicity, status, categoryId } = req.body;
       const userId = req.userId;
 
+      //validasi
+      const { error } = statusArticleSchema.validate(req.body);
+      if (error) {
+        return errorResponse(400, error.details[0].message, res);
+      }
       //is a user?
       if (!userId) throw new Error("you must login first");
 

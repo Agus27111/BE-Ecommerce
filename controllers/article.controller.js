@@ -9,19 +9,29 @@ const {
   errorResponse,
 } = require("../libraries/response.library");
 const { Op, Sequelize } = require("sequelize");
+const ARTICLES_PER_PAGE = 2;
 
 const articleController = {
   getAll: async (req, res) => {
     try {
+      // Menentukan halaman saat ini dari request header atau default ke 1
+      const page = parseInt(req.headers["x-page"], 10) || 1;
+      const offset = (page - 1) * ARTICLES_PER_PAGE;
+
       const freeArticle = await articleModel.findAll({
         where: {
           status: {
             [Op.eq]: "public",
           },
         },
+        limit: ARTICLES_PER_PAGE,
+        offset: offset,
       });
 
-      const allArticles = await articleModel.findAll();
+      const allArticles = await articleModel.findAll({
+        limit: ARTICLES_PER_PAGE,
+        offset: offset,
+      });
 
       if (!req.userId) {
         return successResponse(
@@ -50,16 +60,10 @@ const articleController = {
   findByTitle: async (req, res) => {
     try {
       const title = req.params.title.toLowerCase();
+      const page = parseInt(req.headers["x-page"], 10) || 1;
+      const offset = (page - 1) * ARTICLES_PER_PAGE;
 
-      //searching the title
-      // const dataByTitle = await articleModel.findAll({
-      //   where: {
-      //     title: {
-      //       [Op.substring]: `${title}`,
-      //     },
-      //   },
-      // });
-
+      // Searching by title
       const dataByTitle = await articleModel.findAll({
         where: {
           [Op.and]: Sequelize.where(
@@ -68,10 +72,25 @@ const articleController = {
             `%${title}%`
           ),
         },
+
+        limit: ARTICLES_PER_PAGE,
+        offset: offset,
       });
 
       if (!dataByTitle) throw new Error("title not found");
-      return successResponse(200, dataByTitle, "please enjoy our article", res);
+      return successResponse(
+        200,
+        {
+          articles: rows,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(count / ARTICLES_PER_PAGE),
+            totalArticles: count,
+          },
+        },
+        "Please enjoy our articles",
+        res
+      );
     } catch (error) {
       return errorResponse(
         500,
@@ -83,27 +102,38 @@ const articleController = {
   findByPublicity: async (req, res) => {
     try {
       const year = req.params.year;
+      const page = parseInt(req.headers["x-page"], 10) || 1;
+      const offset = (page - 1) * ARTICLES_PER_PAGE;
 
       // Menentukan rentang tanggal untuk tahun yang diberikan
       const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
       const endDate = new Date(`${year}-12-31T23:59:59.999Z`);
 
       // Searching by year
-      const dataByPublicity = await articleModel.findAll({
+      const { count, rows } = await articleModel.findAndCountAll({
         where: {
           publicity: {
             [Op.between]: [startDate, endDate],
           },
         },
-      });
-      console.log(dataByPublicity);
 
-      if (!dataByPublicity.length) throw new Error("data not found");
+        limit: ARTICLES_PER_PAGE,
+        offset: offset,
+      });
+
+      if (rows.length === 0) throw new Error("data not found");
 
       return successResponse(
         200,
-        dataByPublicity,
-        "please enjoy our article in this period",
+        {
+          articles: rows,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(count / ARTICLES_PER_PAGE),
+            totalArticles: count,
+          },
+        },
+        "Please enjoy our articles in this period",
         res
       );
     } catch (error) {
